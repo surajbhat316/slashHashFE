@@ -5,6 +5,7 @@ export default function Search() {
 
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
+  const [favNames, setFavNames] = useState([]);
 
   useEffect(() => {
     async function getUniversities() {
@@ -17,6 +18,28 @@ export default function Search() {
       // console.log("data => ", data)
     }
     getUniversities();
+
+
+    async function getFavs() {
+        const resp = await fetch("http://localhost:8000/get-fav", {
+          method: "GET",
+          credentials: "include",
+        });
+  
+        const data = await resp.json();
+        console.log("favs => ", data)
+        const favnamesList = [];
+        if(data){
+            data.data.forEach((element) => {
+                favnamesList.push(element.name);
+            })
+        }
+
+        setFavNames([...favnamesList]);
+      }
+      getFavs();
+
+
   }, []);
 
   const handleNameChange = (e) => {
@@ -47,6 +70,24 @@ export default function Search() {
     }
     getUniversities();
   };
+
+  const addToFavs = (e, name) => {
+    async function setFavs(){
+        const resp = await fetch("http://localhost:8000/set-fav", {
+            method: "POST",
+            credentials: "include",
+            body: JSON.stringify({name}),
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        const data = await resp.json();
+        console.log("data ", data);
+
+    }
+
+    setFavs();
+  }
 
   return (
     <div>
@@ -92,7 +133,10 @@ export default function Search() {
                        <>
                             <th scope="row">{index}</th>
                             <td>{university.name}</td>
-                            <td><button className="btn btn-primary">Add to fav</button></td>
+                            <td><button onClick={(e) => addToFavs(e, university.name)} className="btn btn-primary" disabled = {favNames.includes(university.name)}>
+                                {favNames.includes(university.name) ? "Added To Favs" : "Add to Favs"}
+
+                            </button></td>
                        </> 
                 )
               })}
